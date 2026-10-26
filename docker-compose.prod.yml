@@ -1,0 +1,45 @@
+# Production stack. Traefik (already running on the server, network hostedapps_default)
+# terminates HTTPS and routes finance.brayansolutions.com to nginx.
+# PostgreSQL is not in this file: it runs on the server.
+services:
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      ENVIRONMENT: production
+      POSTGRES_HOST: ${DOCKER_POSTGRES_HOST:-host.docker.internal}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    networks:
+      - default
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=hostedapps_default
+      # HTTPS
+      - traefik.http.routers.budget.rule=Host(`finance.brayansolutions.com`)
+      - traefik.http.routers.budget.entrypoints=websecure
+      - traefik.http.routers.budget.tls=true
+      - traefik.http.routers.budget.tls.certresolver=challenger
+      - traefik.http.routers.budget.service=budget
+      # HTTP redirects to HTTPS
+      - traefik.http.routers.budget-http.rule=Host(`finance.brayansolutions.com`)
+      - traefik.http.routers.budget-http.entrypoints=web
+      - traefik.http.routers.budget-http.middlewares=budget-https
+      - traefik.http.middlewares.budget-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.budget-https.redirectscheme.permanent=true
+      - traefik.http.services.budget.loadbalancer.server.port=80
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  traefik:
+    external: true
+    name: hostedapps_default
