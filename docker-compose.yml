@@ -1,0 +1,38 @@
+# Development stack. PostgreSQL is NOT part of this stack: the app uses your own server,
+# configured in .env. Production compose (Caddy + HTTPS) comes in a later phase.
+services:
+  backend:
+    build:
+      context: ./backend
+      args:
+        REQUIREMENTS: requirements-dev.txt
+    env_file: .env
+    environment:
+      # From inside the container "localhost" is the container itself; this reaches the host.
+      POSTGRES_HOST: ${DOCKER_POSTGRES_HOST:-host.docker.internal}
+      WATCHFILES_FORCE_POLLING: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # needed on Linux; harmless on Docker Desktop
+    volumes:
+      - ./backend:/app
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    environment:
+      API_PROXY_TARGET: http://backend:8000
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  frontend_node_modules:
