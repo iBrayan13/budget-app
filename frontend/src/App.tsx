@@ -6,6 +6,7 @@ import CategoriesPage from "./pages/CategoriesPage";
 import DashboardPage from "./pages/DashboardPage";
 import DebtsPage from "./pages/DebtsPage";
 import GoalsPage from "./pages/GoalsPage";
+import LoansPage from "./pages/LoansPage";
 import LoginPage from "./pages/LoginPage";
 import ScenariosPage from "./pages/ScenariosPage";
 import P2PPage from "./pages/P2PPage";
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="obligaciones" element={<RecurringPage />} />
           <Route path="deudas" element={<DebtsPage />} />
           <Route path="metas" element={<GoalsPage />} />
+          <Route path="prestamos" element={<LoansPage />} />
           <Route path="escenarios" element={<ScenariosPage />} />
         </Route>
       </Route>

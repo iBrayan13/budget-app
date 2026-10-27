@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAccounts, useDebts, usePlan, useRecurring, useSeedDefaults } from "../api/hooks";
+import { useAccounts, useDebts, useLoans, usePlan, useRecurring, useSeedDefaults } from "../api/hooks";
 import { useMe } from "../auth/useAuth";
 import { RuleBars } from "../components/RuleBars";
 import { ErrorText, MonthPicker, Progress, Tile } from "../components/ui";
@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const { data: accounts } = useAccounts();
   const { data: recurring } = useRecurring();
   const { data: debts } = useDebts();
+  const { data: loans } = useLoans();
   const seed = useSeedDefaults();
   const base = user?.base_currency ?? "USD";
   const m = (v: string | null | undefined) => fmtMoney(v, base);
@@ -60,9 +61,10 @@ export default function DashboardPage() {
         <Tile label="Comisiones P2P" value={m(plan?.p2p_month)} />
         <Tile label="Disponible total" value={m(plan?.accounts_total)} hint={`${accounts?.accounts.length ?? 0} plataformas`} />
         <Tile label="Disponible libre" value={m(plan?.free)} hint={plan ? `${m(plan.reserved)} apartado en metas` : undefined} />
+        <Tile label="Te deben" value={m(loans?.total_balance_base)} hint="préstamos por cobrar" />
       </section>
 
-      <h2>Promedio de los 3 meses anteriores</h2>
+      <h2>Promedio de los últimos 3 meses</h2>
       <section className="tiles">
         <Tile label="Costo de sobrevivir" value={m(plan?.survive)} hint="esenciales, fijos y variables, más P2P" />
         <Tile

@@ -23,12 +23,17 @@ class TransferCost:
 
 
 def transfer_cost(t: Transfer, rates: RateResolver) -> TransferCost:
+    """value_out is everything that left, in base currency, including an external fee."""
+    external = t.fee_account_id is not None
     rate_out = t.ref_rate_out or rates.rate(t.from_account.currency, t.occurred_on)
     rate_in = t.ref_rate_in or rates.rate(t.to_account.currency, t.occurred_on)
+    rate_fee = rates.rate(t.fee_account.currency, t.occurred_on) if external else rate_out
 
-    value_out = t.amount_out / rate_out if rate_out else None
     value_in = t.amount_in / rate_in if rate_in else None
-    fee = t.fee_amount / rate_out if rate_out else None
+    fee = t.fee_amount / rate_fee if rate_fee else None
+    value_out = None
+    if rate_out and (not external or fee is not None):
+        value_out = t.amount_out / rate_out + (fee if external else 0)
     cost = value_out - value_in if value_out is not None and value_in is not None else None
     spread = cost - fee if cost is not None and fee is not None else None
     return TransferCost(value_out, value_in, cost, fee, spread)

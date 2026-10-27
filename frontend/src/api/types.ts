@@ -74,6 +74,8 @@ export type Transfer = {
   amount_out: Dec;
   amount_in: Dec;
   fee_amount: Dec;
+  fee_account_id: number | null;
+  fee_currency: string;
   ref_rate_out: Dec | null;
   ref_rate_in: Dec | null;
   occurred_on: string;
@@ -87,6 +89,7 @@ export type TransferStepInput = {
   amount_out: string;
   amount_in: string;
   fee_amount: string;
+  fee_account_id: number | null;
   ref_rate_out: string | null;
   ref_rate_in: string | null;
   occurred_on: string | null;
@@ -333,4 +336,38 @@ export type Scenario = {
   fund_months: Dec | null;
   required_income: Dec;
   max_lifestyle: Dec;
+};
+
+// --- Loans (money you lent) ----------------------------------------------------------------
+
+export type LoanPayment = {
+  id: number;
+  account_id: number;
+  account_name: string;
+  amount: Dec;
+  occurred_on: string;
+  notes: string | null;
+};
+
+export type Loan = {
+  id: number;
+  borrower: string;
+  account_id: number;
+  account_name: string;
+  currency: string;
+  principal: Dec;
+  start_date: string;
+  due_date: string | null;
+  notes: string | null;
+  paid: Dec;
+  balance: Dec;
+  balance_base: Dec | null;
+  progress_pct: Dec;
+  payments: LoanPayment[];
+};
+
+export type LoansSummary = {
+  base_currency: string;
+  total_balance_base: Dec;
+  items: Loan[];
 };

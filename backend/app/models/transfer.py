@@ -56,7 +56,12 @@ class Transfer(TimestampMixin, Base):
     )
     amount_out: Mapped[Decimal]
     amount_in: Mapped[Decimal]
-    fee_amount: Mapped[Decimal] = mapped_column(default=Decimal(0))  # in the source currency
+    fee_amount: Mapped[Decimal] = mapped_column(default=Decimal(0))
+    # None: fee is part of amount_out (charged on the source). Set: fee is an extra debit
+    # from this platform, in its currency, on top of amount_out.
+    fee_account_id: Mapped[int | None] = mapped_column(
+        ForeignKey("accounts.id", ondelete="RESTRICT"), index=True
+    )
     ref_rate_out: Mapped[Decimal | None]
     ref_rate_in: Mapped[Decimal | None]
     occurred_on: Mapped[date] = mapped_column(index=True)
@@ -65,3 +70,4 @@ class Transfer(TimestampMixin, Base):
     route: Mapped[TransferRoute | None] = relationship(back_populates="steps")
     from_account: Mapped[Account] = relationship(foreign_keys=[from_account_id], lazy="joined")
     to_account: Mapped[Account] = relationship(foreign_keys=[to_account_id], lazy="joined")
+    fee_account: Mapped[Account | None] = relationship(foreign_keys=[fee_account_id], lazy="joined")

@@ -131,7 +131,7 @@ export default function P2PPage() {
                       </td>
                       <td className="num">{fmtMoney(s.amount_out, s.from_currency)}</td>
                       <td className="num">{fmtMoney(s.amount_in, s.to_currency)}</td>
-                      <td className="num">{fmtMoney(s.fee_amount, s.from_currency)}</td>
+                      <td className="num">{fmtMoney(s.fee_amount, s.fee_currency)}</td>
                       <td className="num">
                         {fmtMoney(s.cost.cost, base)}
                         <div className="muted small">{fmtPct(s.cost.cost_pct)}</div>
@@ -172,6 +172,7 @@ function emptyStep(from = 0, to = 0, amountOut = ""): TransferStepInput {
     amount_out: amountOut,
     amount_in: "",
     fee_amount: "0",
+    fee_account_id: null,
     ref_rate_out: null,
     ref_rate_in: null,
     occurred_on: null,
@@ -202,6 +203,7 @@ function RouteForm({
           amount_out: plain(s.amount_out),
           amount_in: plain(s.amount_in),
           fee_amount: plain(s.fee_amount) || "0",
+          fee_account_id: s.fee_account_id,
           ref_rate_out: s.ref_rate_out ? plain(s.ref_rate_out) : null,
           ref_rate_in: s.ref_rate_in ? plain(s.ref_rate_in) : null,
           occurred_on: s.occurred_on,
@@ -307,7 +309,7 @@ function RouteForm({
               />
             </label>
             <label>
-              Comisión ({currency(s.from_account_id)})
+              Comisión ({currency(s.fee_account_id ?? s.from_account_id)})
               <input
                 type="number"
                 step="any"
@@ -317,6 +319,22 @@ function RouteForm({
               />
             </label>
           </div>
+          <label>
+            Comisión se cobra desde
+            <select
+              value={s.fee_account_id ?? ""}
+              onChange={(e) => update(i, { fee_account_id: e.target.value ? Number(e.target.value) : null })}
+            >
+              <option value="">Dentro de lo que envío ({currency(s.from_account_id)})</option>
+              {accounts
+                .filter((a) => a.id !== s.from_account_id)
+                .map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} ({a.currency}), además de lo que envío
+                  </option>
+                ))}
+            </select>
+          </label>
           {showRates && (
             <div className="grid-3">
               <label>

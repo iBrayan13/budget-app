@@ -15,12 +15,12 @@ def _tx(auth, account, kind, amount, category, on):
 
 
 def _setup(auth):
-    """Income 1000/month in Jul-Sep, 300 essential and 60 lifestyle spent in the window."""
+    """Income 1000/month in Aug-Oct, 300 essential and 60 lifestyle spent in Aug-Sep."""
     fb = make_account(auth, "Facebank", "USD", "bank", initial_balance="5000")
     salary = make_category(auth, "Salario", kind="income")
     mercado = make_category(auth, "Mercado")
     cine = make_category(auth, "Cine", level="lifestyle")
-    for on in ("2026-07-10", "2026-08-10", "2026-09-10"):
+    for on in ("2026-08-10", "2026-09-10", "2026-10-10"):
         _tx(auth, fb, "income", "1000", salary, on)
     _tx(auth, fb, "expense", "300", mercado, "2026-08-15")
     _tx(auth, fb, "expense", "60", cine, "2026-09-15")
@@ -118,7 +118,7 @@ def test_month_costs_include_paid_and_pending_fixed(auth):
     plan = auth.get("/api/plan", params={"month": MONTH}).json()
     # Nothing paid yet: the 200 due on Oct 5 is pending, so it is already a cost of the month
     assert D(plan["costs_month"]) == D("200.00")
-    assert D(plan["net_month"]) == D("-200.00")
-    assert D(plan["income_month"]) == D("0.00")
+    assert D(plan["net_month"]) == D("800.00")
+    assert D(plan["income_month"]) == D("1000.00")
     assert D(plan["fixed_essential"]) == D("200.00")
     assert D(plan["survive"]) == D("300.00")  # 100 variable + 200 rent

@@ -9,6 +9,7 @@ from app.api.routes import (
     debts,
     goals,
     health,
+    loans,
     plan,
     rates,
     recurring,
@@ -50,6 +51,7 @@ for module in (
     recurring,
     debts,
     goals,
+    loans,
     plan,
 ):
     api.include_router(module.router)

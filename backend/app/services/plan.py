@@ -161,8 +161,9 @@ class Base:
 
 
 def average_base(db: Session, user: User, rates: RateResolver, month: date, today: date) -> Base:
-    win_start = month_start(month, WINDOW)
-    win_end = month_start(month) - timedelta(days=1)
+    # The last WINDOW months, the chosen one included, so new income shows up right away.
+    win_start = month_start(month, WINDOW - 1)
+    win_end = month_bounds(month)[1]
     f = flows(db, user, rates, win_start, win_end)
     fixed_e, fixed_l = recurring_monthly(db, user, rates, today)
     n = Decimal(WINDOW)

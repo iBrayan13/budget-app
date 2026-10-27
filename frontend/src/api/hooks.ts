@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
 import type {
+  LoansSummary,
   Allocation,
   AccountKind,
   Plan,
@@ -44,6 +45,7 @@ const MONEY_KEYS = [
   ["debts"],
   ["plan"],
   ["allocations"],
+  ["loans"],
 ];
 
 function useInvalidate(keys: string[][] = MONEY_KEYS) {
@@ -433,5 +435,59 @@ export function useScenario(month: string, lifestyleTarget: string) {
         json: { lifestyle_target: lifestyleTarget },
       }),
     enabled: lifestyleTarget !== "",
+  });
+}
+
+// --- Loans ----------------------------------------------------------------------------------
+
+export function useLoans() {
+  return useQuery({ queryKey: ["loans"], queryFn: () => api<LoansSummary>("/loans") });
+}
+
+export function useSaveLoan() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: {
+      borrower: string;
+      account_id: number;
+      amount: string;
+      start_date: string;
+      due_date: string | null;
+      notes: string | null;
+    }) => api("/loans", { method: "POST", json: body }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteLoan() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: number) => api(`/loans/${id}`, { method: "DELETE" }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useLoanPayment() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({
+      loanId,
+      ...body
+    }: {
+      loanId: number;
+      account_id: number;
+      amount: string;
+      occurred_on: string;
+      notes?: string | null;
+    }) => api(`/loans/${loanId}/payments`, { method: "POST", json: body }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteLoanPayment() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: number) => api(`/loan-payments/${id}`, { method: "DELETE" }),
+    onSuccess: invalidate,
   });
 }

@@ -10,6 +10,7 @@ const NAV = [
   { to: "/obligaciones", icon: "📅", label: "Gastos fijos" },
   { to: "/deudas", icon: "💳", label: "Deudas" },
   { to: "/metas", icon: "🎯", label: "Metas y fondo" },
+  { to: "/prestamos", icon: "🤝", label: "Préstamos" },
   { to: "/escenarios", icon: "🧭", label: "Escenarios" },
 ];
 
