@@ -33,7 +33,7 @@ def test_external_fee_is_charged_from_its_own_platform_and_currency(auth):
     assert D(accounts["Binance"]["balance"]) == D("148")  # 50 + 99 - 1
 
 
-def test_inside_fee_stays_part_of_the_amount_sent(auth):
+def test_fee_from_same_platform_is_an_extra_debit(auth):
     fb = make_account(auth, "Facebank", "USD", "bank", initial_balance="1000")
     bn = make_account(auth, "Binance", "USDT", "exchange")
     res = auth.post(
@@ -44,13 +44,36 @@ def test_inside_fee_stays_part_of_the_amount_sent(auth):
             "amount_out": "100",
             "amount_in": "99",
             "fee_amount": "1",
-            "fee_account_id": fb["id"],  # same platform: fee is inside the 100
+            "fee_account_id": fb["id"],
+            "occurred_on": "2026-10-05",
+        },
+    )
+    assert res.status_code == 201, res.text
+    assert res.json()["fee_account_id"] == fb["id"]
+    assert D(res.json()["cost"]["cost"]) == D("2.00")
+    accounts = {a["name"]: a for a in auth.get("/api/accounts").json()["accounts"]}
+    assert D(accounts["Facebank"]["balance"]) == D("899")
+
+
+def test_legacy_inside_fee_stays_part_of_the_amount_sent(auth):
+    fb = make_account(auth, "Facebank", "USD", "bank", initial_balance="1000")
+    bn = make_account(auth, "Binance", "USDT", "exchange")
+    res = auth.post(
+        "/api/transfers",
+        json={
+            "from_account_id": fb["id"],
+            "to_account_id": bn["id"],
+            "amount_out": "100",
+            "amount_in": "99",
+            "fee_amount": "1",
             "occurred_on": "2026-10-05",
         },
     )
     assert res.status_code == 201, res.text
     assert res.json()["fee_account_id"] is None
     assert D(res.json()["cost"]["cost"]) == D("1.00")
+    accounts = {a["name"]: a for a in auth.get("/api/accounts").json()["accounts"]}
+    assert D(accounts["Facebank"]["balance"]) == D("900")
 
 
 def test_inside_fee_cannot_exceed_amount_sent(auth):

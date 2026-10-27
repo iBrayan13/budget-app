@@ -172,7 +172,7 @@ function emptyStep(from = 0, to = 0, amountOut = ""): TransferStepInput {
     amount_out: amountOut,
     amount_in: "",
     fee_amount: "0",
-    fee_account_id: null,
+    fee_account_id: from || null,
     ref_rate_out: null,
     ref_rate_in: null,
     occurred_on: null,
@@ -218,7 +218,14 @@ function RouteForm({
 
   const currency = (id: number) => accounts.find((a) => a.id === id)?.currency ?? "";
   const update = (i: number, patch: Partial<TransferStepInput>) =>
-    setSteps((all) => all.map((s, j) => (j === i ? { ...s, ...patch } : s)));
+    setSteps((all) =>
+      all.map((s, j) => {
+        if (j !== i) return s;
+        // Fee platform follows the source platform while they were the same.
+        const follow = patch.from_account_id !== undefined && s.fee_account_id === s.from_account_id;
+        return { ...s, ...patch, ...(follow ? { fee_account_id: patch.from_account_id } : {}) };
+      }),
+    );
 
   function addStep() {
     // Next step starts where the previous one ended, with what arrived.
@@ -320,19 +327,17 @@ function RouteForm({
             </label>
           </div>
           <label>
-            Comisión se cobra desde
+            Comisión se cobra desde (se suma a lo que envías)
             <select
               value={s.fee_account_id ?? ""}
               onChange={(e) => update(i, { fee_account_id: e.target.value ? Number(e.target.value) : null })}
             >
-              <option value="">Dentro de lo que envío ({currency(s.from_account_id)})</option>
-              {accounts
-                .filter((a) => a.id !== s.from_account_id)
-                .map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name} ({a.currency}), además de lo que envío
-                  </option>
-                ))}
+              {s.fee_account_id === null && <option value="">Incluida en lo que envío (dato anterior)</option>}
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ({a.currency})
+                </option>
+              ))}
             </select>
           </label>
           {showRates && (

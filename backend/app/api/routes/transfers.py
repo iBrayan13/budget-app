@@ -94,16 +94,8 @@ def _route_out(route: TransferRoute, rates: RateResolver) -> RouteOut:
 def _check_accounts(db: DbSession, user: User, body: TransferIn) -> None:
     get_owned(db, Account, body.from_account_id, user, "Plataforma de origen")
     get_owned(db, Account, body.to_account_id, user, "Plataforma de destino")
-    if body.fee_account_id not in (None, body.from_account_id):
+    if body.fee_account_id is not None:
         get_owned(db, Account, body.fee_account_id, user, "Plataforma de la comisión")
-
-
-def _fields(body: TransferIn) -> dict:
-    """Stores the fee account only when it is an extra debit; same platform means 'inside'."""
-    data = body.model_dump()
-    if data["fee_account_id"] == data["from_account_id"]:
-        data["fee_account_id"] = None
-    return data
 
 
 # --- Single transfers -------------------------------------------------------------------------
@@ -135,7 +127,7 @@ def list_transfers(
 @router.post("/transfers", response_model=TransferOut, status_code=status.HTTP_201_CREATED)
 def create_transfer(body: TransferIn, db: DbSession, user: CurrentUser):
     _check_accounts(db, user, body)
-    t = Transfer(user_id=user.id, **_fields(body))
+    t = Transfer(user_id=user.id, **body.model_dump())
     db.add(t)
     db.commit()
     db.refresh(t)
@@ -146,7 +138,7 @@ def create_transfer(body: TransferIn, db: DbSession, user: CurrentUser):
 def replace_transfer(transfer_id: int, body: TransferIn, db: DbSession, user: CurrentUser):
     t = get_owned(db, Transfer, transfer_id, user, "Transferencia")
     _check_accounts(db, user, body)
-    for field, value in _fields(body).items():
+    for field, value in body.model_dump().items():
         setattr(t, field, value)
     db.commit()
     db.refresh(t)
@@ -165,7 +157,7 @@ def delete_transfer(transfer_id: int, db: DbSession, user: CurrentUser):
 def _add_steps(db: DbSession, user: User, route: TransferRoute, body: RouteIn) -> None:
     for i, step in enumerate(body.steps, start=1):
         _check_accounts(db, user, step)
-        data = _fields(step)
+        data = step.model_dump()
         data["occurred_on"] = step.occurred_on or body.started_on
         db.add(Transfer(user_id=user.id, route_id=route.id, step=i, **data))
 

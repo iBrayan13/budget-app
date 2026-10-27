@@ -13,7 +13,7 @@ class TransferIn(BaseModel):
     amount_out: PositiveAmount  # everything that left the source, fees included
     amount_in: PositiveAmount  # what actually arrived
     fee_amount: Decimal = Field(default=Decimal(0), ge=0, max_digits=20, decimal_places=8)
-    # Platform that charged the fee, in its currency. Empty: the fee is inside amount_out.
+    # Platform charging the fee (extra debit). Empty only for old data: fee inside amount_out.
     fee_account_id: int | None = None
     ref_rate_out: Rate | None = None
     ref_rate_in: Rate | None = None
@@ -24,8 +24,7 @@ class TransferIn(BaseModel):
     def check(self) -> Self:
         if self.from_account_id == self.to_account_id:
             raise ValueError("Origen y destino deben ser distintos")
-        external = self.fee_account_id not in (None, self.from_account_id)
-        if not external and self.fee_amount > self.amount_out:
+        if self.fee_account_id is None and self.fee_amount > self.amount_out:
             raise ValueError("La comisión no puede superar el monto enviado")
         return self
 
