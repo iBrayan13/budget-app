@@ -61,7 +61,7 @@ export default function RecurringPage() {
         <Empty>No hay pagos programados en este mes.</Empty>
       ) : (
         <div className="card table-wrap">
-          <table className="table">
+          <table className="table table-stack">
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -91,7 +91,7 @@ export default function RecurringPage() {
         <Empty>Aún no tienes gastos fijos. Agrega el primero abajo (arriendo, servicios, suscripciones…).</Empty>
       ) : (
         <div className="card table-wrap">
-          <table className="table">
+          <table className="table table-stack">
             <thead>
               <tr>
                 <th>Gasto</th>
@@ -105,17 +105,17 @@ export default function RecurringPage() {
             <tbody>
               {summary.items.map((e) => (
                 <tr key={e.id} className={e.is_active ? "" : "archived"}>
-                  <td>
+                  <td data-label="Gasto">
                     {e.name}
                     <div className="muted small">
                       {catName(e.category_id)} · {e.level === "essential" ? "esencial" : "estilo de vida"}
                     </div>
                   </td>
-                  <td>{describeRule(e.rrule)}</td>
-                  <td className="num">{fmtMoney(e.amount, e.currency)}</td>
-                  <td className="num">{fmtMoney(e.monthly_amount_base, base)}</td>
-                  <td>{e.next_due_date ?? "—"}</td>
-                  <td className="num nowrap">
+                  <td data-label="Frecuencia">{describeRule(e.rrule)}</td>
+                  <td data-label="Monto" className="num">{fmtMoney(e.amount, e.currency)}</td>
+                  <td data-label="Al mes" className="num">{fmtMoney(e.monthly_amount_base, base)}</td>
+                  <td data-label="Próximo">{e.next_due_date ?? "—"}</td>
+                  <td data-label="" className="num nowrap">
                     {e.debt_id ? (
                       <Link to="/deudas" className="link small">
                         Ver deuda
@@ -157,23 +157,23 @@ function ObligationRow({ o, base }: { o: Obligation; base: string }) {
   return (
     <>
       <tr className={o.status === "skipped" ? "archived" : ""}>
-        <td className={o.is_overdue ? "danger" : ""}>{o.due_date}</td>
-        <td>
+        <td data-label="Fecha" className={o.is_overdue ? "danger" : ""}>{o.due_date}</td>
+        <td data-label="Gasto">
           {o.name}
           {o.debt_id && <span className="badge">deuda</span>}
         </td>
-        <td className="num">
+        <td data-label="Monto" className="num">
           {fmtMoney(o.status === "paid" ? o.paid_amount : o.expected_amount, o.status === "paid" ? o.paid_currency! : o.currency)}
           {o.currency !== base && o.status !== "paid" && (
             <div className="muted small">≈ {fmtMoney(o.expected_base, base)}</div>
           )}
         </td>
-        <td>
+        <td data-label="Estado">
           <span className={`badge status-${o.is_overdue ? "overdue" : o.status}`}>
             {o.is_overdue ? "Vencido" : STATUS_LABEL[o.status]}
           </span>
         </td>
-        <td className="num nowrap">
+        <td data-label="" className="num nowrap">
           {o.status === "pending" ? (
             <>
               <button className="link small" onClick={() => setPaying(!paying)}>

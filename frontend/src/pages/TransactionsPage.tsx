@@ -96,7 +96,7 @@ export default function TransactionsPage() {
         <Empty>No hay movimientos en este mes.</Empty>
       ) : (
         <div className="card table-wrap">
-          <table className="table">
+          <table className="table table-stack">
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -114,22 +114,22 @@ export default function TransactionsPage() {
                 const cat = t.category_id ? categoryById.get(t.category_id) : undefined;
                 return (
                   <tr key={t.id}>
-                    <td>{t.occurred_on}</td>
-                    <td>
+                    <td data-label="Fecha">{t.occurred_on}</td>
+                    <td data-label="Tipo">
                       <span className={`badge kind-${t.kind}`}>{KIND_LABEL[t.kind]}</span>
                     </td>
-                    <td>{accountName(t.account_id)}</td>
-                    <td>
+                    <td data-label="Plataforma">{accountName(t.account_id)}</td>
+                    <td data-label="Categoría">
                       {cat?.name ?? "—"}
                       {cat?.level === "essential" && <span className="muted small"> · esencial</span>}
                     </td>
-                    <td className="muted">{t.description}</td>
-                    <td className="num">
+                    <td data-label="Descripción" className="muted">{t.description}</td>
+                    <td data-label="Monto" className="num">
                       {t.kind === "expense" ? "−" : ""}
                       {fmtMoney(t.amount, t.currency)}
                     </td>
-                    <td className="num muted">{fmtMoney(t.amount_base, base)}</td>
-                    <td className="num nowrap">
+                    <td data-label="Equivalente" className="num muted">{fmtMoney(t.amount_base, base)}</td>
+                    <td data-label="" className="num nowrap">
                       <button className="link" onClick={() => setEditing(t)}>
                         Editar
                       </button>{" "}
