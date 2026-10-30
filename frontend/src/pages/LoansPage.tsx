@@ -19,8 +19,6 @@ export default function LoansPage() {
   const m = (v: string | null | undefined, c?: string) => fmtMoney(v, c ?? base);
 
   const items = data?.items ?? [];
-  const lent = items.reduce((sum, l) => sum + Number(l.principal), 0);
-  const collected = items.reduce((sum, l) => sum + Number(l.paid), 0);
 
   return (
     <>
@@ -33,8 +31,8 @@ export default function LoansPage() {
 
       <section className="tiles">
         <Tile label="Te deben" value={m(data?.total_balance_base)} hint="en tu moneda base" />
-        <Tile label="Prestado en total" value={m(String(lent))} hint="suma de los montos originales" />
-        <Tile label="Ya cobrado" value={m(String(collected))} />
+        <Tile label="Prestado en total" value={m(data?.principal_total_base)} hint="montos originales, en tu moneda base" />
+        <Tile label="Ya cobrado" value={m(data?.paid_total_base)} />
       </section>
 
       <NewLoanForm />

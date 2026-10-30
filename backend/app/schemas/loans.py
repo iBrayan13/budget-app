@@ -52,4 +52,6 @@ class LoanOut(BaseModel):
 class LoansSummary(BaseModel):
     base_currency: str
     total_balance_base: Dec
+    principal_total_base: Dec
+    paid_total_base: Dec
     items: list[LoanOut]

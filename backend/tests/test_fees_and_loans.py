@@ -161,9 +161,31 @@ def test_loan_moves_money_out_and_payments_back(auth):
     assert D(plan["costs_month"]) == D("0.00")
     assert D(plan["income_month"]) == D("0.00")
 
+    # Loans in different currencies are added up in base currency, not by raw amount
+    cop = make_account(auth, "Nequi 2", "COP", "wallet", initial_balance="1000000")
+    auth.put(
+        "/api/exchange-rates", json={"currency": "COP", "rate_date": "2026-10-01", "rate": "3900"}
+    )
+    luis = auth.post(
+        "/api/loans",
+        json={
+            "borrower": "Luis",
+            "account_id": cop["id"],
+            "amount": "680000",
+            "start_date": "2026-10-01",
+        },
+    )
+    assert luis.status_code == 201, luis.text
+    summary = auth.get("/api/loans").json()
+    assert D(summary["principal_total_base"]) == D("474.36")  # 300 USD + 680000 COP at 3900
+    assert D(summary["total_balance_base"]) == D(
+        "374.36"
+    )  # 200 USD + 680000 COP, nothing paid there
+
     # Deleting the loan undoes it
     assert auth.delete(f"/api/loans/{lid}").status_code == 204
     accounts = {a["name"]: a for a in auth.get("/api/accounts").json()["accounts"]}
     assert D(accounts["Facebank"]["balance"]) == D("1000")
     assert D(accounts["Zinli"]["balance"]) == D("0")
+    assert auth.delete(f"/api/loans/{luis.json()['id']}").status_code == 204
     assert auth.get("/api/loans").json()["items"] == []

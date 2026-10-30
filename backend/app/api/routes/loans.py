@@ -67,9 +67,21 @@ def list_loans(db: DbSession, user: CurrentUser):
             .order_by(Loan.start_date.desc(), Loan.id.desc())
         )
     ]
-    total = sum((i.balance_base for i in items if i.balance_base is not None), Z)
+    # Every amount is converted to base currency; loans in currencies without a rate are skipped.
+    total = lent = paid = Z
+    for i in items:
+        rate = rates.rate(i.currency, today)
+        if rate is None:
+            continue
+        total += i.balance / rate
+        lent += i.principal / rate
+        paid += i.paid / rate
     return LoansSummary(
-        base_currency=user.base_currency, total_balance_base=money(total), items=items
+        base_currency=user.base_currency,
+        total_balance_base=money(total),
+        principal_total_base=money(lent),
+        paid_total_base=money(paid),
+        items=items,
     )
 
 

@@ -369,5 +369,7 @@ export type Loan = {
 export type LoansSummary = {
   base_currency: string;
   total_balance_base: Dec;
+  principal_total_base: Dec;
+  paid_total_base: Dec;
   items: Loan[];
 };
